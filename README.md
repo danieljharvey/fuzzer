@@ -1,14 +1,3 @@
-# ts-boilerplate
-Starting point for TS projects as I keep doing this a lot
+# fuzzer
 
-Commands:
-
-`yarn test` - Tests
-
-`yarn test:watch` - Tests in watch mode
-
-`yarn tsc` - Typescript, once
-
-`yarn tsc:watch` - Typescript in watch mode
-
-`yarn tsc:check` - Typescript in watch mode, don't bother making files though
+A (probably pointless) proof of concept to see if I can use the Typescript AST to see what it is that functions want, and then use it to property test them.
