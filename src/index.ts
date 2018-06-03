@@ -1,4 +1,5 @@
 import { tsquery } from "@phenomnomnominal/tsquery";
+import { SourceFile, SyntaxKind } from "typescript";
 
 // great job
 const fs = require('fs')
@@ -39,12 +40,6 @@ const readFile = (): string => {
     return fs.readFileSync('./src/functions.ts', 'utf8');
 }
 
-
-export const enum NodeKinds {
-    ConstVariable = 213,
-    RegularFunction = 233
-}
-
 export const extractConstFunctions = (code: string): any => {
     const ast = tsquery.ast(code);
 
@@ -59,6 +54,22 @@ export const extractFunctions = (code: string): any => {
 
     const query = 'FunctionDeclaration';
     const nodes = tsquery(ast, query);
-    console.log(nodes[0]); // the TypeScript AST Node for the constructor function
-    return nodes;
+
+    return nodes.map(calcFunctionParams)
+}
+
+const calcFunctionParams = (node: any): any => {
+    // console.log(node)
+    return {
+        name: node.name.name,
+        kind: node.kind,
+        parameters: node.parameters.map(calcParameterTypes)
+    }
+}
+
+const calcParameterTypes = (param: any): any => {
+    return {
+        name: param.name.name,
+        type: param.type.kind
+    }
 }

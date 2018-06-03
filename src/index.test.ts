@@ -1,6 +1,7 @@
-import { runFunction, extractConstFunctions, extractFunctions, NodeKinds } from '../src/index'
+import { runFunction, extractConstFunctions, extractFunctions } from '../src/index'
 import { tsquery } from '@phenomnomnominal/tsquery'
 import * as funcs from './functions'
+import { SyntaxKind } from 'typescript';
 
 describe("It is the tests", () => {
     it("Runs a zero arity function", () => {
@@ -14,7 +15,7 @@ describe("It is the tests", () => {
         expect(result + 1).toEqual(result + 1)
     })
 
-    it("Runs a one arity function that wants a string", () => {
+    it.skip("Runs a one arity function that wants a string", () => {
         const result = runFunction(funcs.func1String)
         expect(String(result)).toEqual(result)
         expect(result + "!").toEqual(result + "!")
@@ -45,7 +46,7 @@ describe("Parsing for const functions", () => {
 
     it("Detects that these are Consts", () => {
         extractConstFunctions(testCode).map((node: any) => {
-            expect(node.kind).toEqual(NodeKinds.ConstVariable)
+            expect(node.kind).toEqual(SyntaxKind.VariableStatement)
         })
     })
 })
@@ -58,7 +59,26 @@ describe("Parsing for regular functions", () => {
 
     it("Detects that these are Functions", () => {
         extractFunctions(testCode).map((node: any) => {
-            expect(node.kind).toEqual(NodeKinds.RegularFunction)
+            expect(node.kind).toEqual(SyntaxKind.FunctionDeclaration)
         })
+    })
+
+    it("Detects that the function requires one argument", () => {
+        const firstFunc = extractFunctions(testCode)[0]
+        expect(firstFunc.parameters.length).toEqual(1)
+    })
+
+    it("Detects that the first function requires a number", () => {
+        const firstFunc = extractFunctions(testCode)[0]
+        expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.NumberKeyword)
+    })
+
+    it('Gets the first functions name', () => {
+        const firstFunc = extractFunctions(testCode)[0]
+        expect(firstFunc.name).toEqual("func1Number2")
+    })
+
+    it('Counts 1 line of statements in the first function', () => {
+
     })
 })
