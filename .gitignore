@@ -1,0 +1,9 @@
+# crap
+.DS_Store
+
+# js stuff
+node_modules/
+yarn.error
+
+# output folder
+dist/
