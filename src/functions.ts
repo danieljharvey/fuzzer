@@ -1,11 +1,15 @@
 export const func0 = () => {
-    return "poo"
-}
+  return "poo";
+};
 
 export const func1Number = (num: number) => {
-    return num
-}
+  return num;
+};
 
 export const func1String = (str: string) => {
-    return str
+  return str;
+};
+
+export function func1Number2(num: number) {
+  return num;
 }
