@@ -39,6 +39,12 @@ describe("It is the tests", () => {
     expect(String(strResult)).toEqual(strResult);
     expect(Number(numResult)).toEqual(numResult);
   });
+
+  it("Runs a function that wants an array of numbers", () => {
+    const allWrapped = wrapAll(allFunctionsString, allFunctions);
+    const result = runFunction(allWrapped, funcs.func1Number2);
+    result.map((item: any) => expect(Number(item)).toEqual(item));
+  });
 });
 
 const readFile = (): string => {

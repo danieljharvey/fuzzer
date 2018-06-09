@@ -14,7 +14,7 @@ describe("Passing JS functions for information", () => {
   });
 
   it("Gets the names of the arguments for a function", () => {
-    expect(calcJSFunctionParams(funcs.func1Number2).parameters).toEqual(["num"]);
+    expect(calcJSFunctionParams(funcs.func1Number2).parameters).toEqual(["nums"]);
   });
 
   it("Detects this is a regular function", () => {

@@ -24,17 +24,27 @@ const getParamData = (param: any) => {
   switch (param.type) {
     case SyntaxKind.StringKeyword:
       return genChar();
+    case SyntaxKind.ArrayType:
+      return genArray();
     default:
       return genNumber();
   }
 };
 
+const randomIntGen = (max: number): number => Math.round(Math.random() * max);
+
 const genChar = (): string => {
-  return String.fromCharCode(Math.round(Math.random() * 512));
+  return String.fromCharCode(randomIntGen(512));
 };
 
 const genNumber = (): number => {
   return Math.random() * 30000;
+};
+
+const genArray = (): number[] => {
+  const length = randomIntGen(1000);
+  const arr = new Array(length);
+  return arr.map(item => genNumber());
 };
 
 export const wrapAll = (code: string, obj: any) => {

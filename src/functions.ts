@@ -10,8 +10,8 @@ export const func1String = (str: string) => {
   return str;
 };
 
-export function func1Number2(num: number) {
-  return num;
+export function func1Number2(nums: number[]): number[] {
+  return nums.map(num => num + 1);
 }
 
 export const func1NumberBracketless = (num: number) => num + 10;
