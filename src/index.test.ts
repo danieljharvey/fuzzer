@@ -1,120 +1,101 @@
-import { runFunction, extractConstFunctions, extractFunctions } from "../src/index";
-import { tsquery } from "@phenomnomnominal/tsquery";
+import {
+  runFunction,
+  extractAll,
+  calcJSFunctionParams,
+  calcAll,
+  match,
+  wrapMatched,
+  wrapAll,
+  findInWrapped
+} from "../src/index";
 import * as funcs from "./functions";
-import { SyntaxKind } from "typescript";
+const fs = require("fs");
 
 describe("It is the tests", () => {
   it("Runs a zero arity function", () => {
-    expect(runFunction(funcs.func0)).toEqual("poo");
+    const allWrapped = wrapAll(allFunctionsString, allFunctions);
+    expect(runFunction(allWrapped, funcs.func0)).toEqual("poo");
   });
 
   it("Runs a one arity function", () => {
-    const result = runFunction(funcs.func1Number);
+    const allWrapped = wrapAll(allFunctionsString, allFunctions);
+    const result = runFunction(allWrapped, funcs.func1Number);
 
     expect(Number(result)).toEqual(result);
     expect(result + 1).toEqual(result + 1);
   });
 
-  it.skip("Runs a one arity function that wants a string", () => {
-    const result = runFunction(funcs.func1String);
+  it("Runs a one arity function that wants a string", () => {
+    const allWrapped = wrapAll(allFunctionsString, allFunctions);
+    const result = runFunction(allWrapped, funcs.func1String);
     expect(String(result)).toEqual(result);
     expect(result + "!").toEqual(result + "!");
   });
-});
 
-const testCode = `
-export const func0 = () => {
-    return "poo"
-}
-
-export const func1Number = (num: number) => {
-    return num
-}
-
-export const func1String = (str: string) => {
-    return str
-}
-
-export function func1Number2(num: number) {
-    return num
-}
-`;
-
-describe("Parsing for const functions", () => {
-  it("Detects that there are three functions", () => {
-    expect(extractConstFunctions(testCode).length).toEqual(3);
-  });
-
-  it("Detects that these are Consts", () => {
-    extractConstFunctions(testCode).map((node: any) => {
-      expect(node.kind).toEqual(SyntaxKind.VariableDeclaration);
-    });
-  });
-
-  it("Gets the first functions name", () => {
-    const firstFunc = extractConstFunctions(testCode)[0];
-    expect(firstFunc.name).toEqual("func0");
-  });
-
-  it("Counts 1 line of statements in the first function", () => {
-    const firstFunc = extractConstFunctions(testCode)[0];
-    expect(firstFunc.lines).toEqual(1);
-  });
-
-  it("Detects that the first const function requires no arguments", () => {
-    const firstFunc = extractConstFunctions(testCode)[0];
-    expect(firstFunc.parameters.length).toEqual(0);
-  });
-
-  it("Gets the second functions name", () => {
-    const firstFunc = extractConstFunctions(testCode)[1];
-    expect(firstFunc.name).toEqual("func1Number");
-  });
-
-  it("Counts 1 line of statements in the second function", () => {
-    const firstFunc = extractConstFunctions(testCode)[1];
-    expect(firstFunc.lines).toEqual(1);
-  });
-
-  it("Detects that the second const function requires 1 argument", () => {
-    const firstFunc = extractConstFunctions(testCode)[1];
-    expect(firstFunc.parameters.length).toEqual(1);
-  });
-
-  it("Detects that the second const function requires a number", () => {
-    const firstFunc = extractConstFunctions(testCode)[1];
-    expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.NumberKeyword);
+  it("Runs a two arity function that wants a string and then a number", () => {
+    const allWrapped = wrapAll(allFunctionsString, allFunctions);
+    const result = runFunction(allWrapped, funcs.numAndString);
+    const [numResult, strResult] = result;
+    expect(String(strResult)).toEqual(strResult);
+    expect(Number(numResult)).toEqual(numResult);
   });
 });
 
-describe("Parsing for regular functions", () => {
-  it("Detects that there is one function", () => {
-    expect(extractFunctions(testCode).length).toEqual(1);
+const readFile = (): string => {
+  return fs.readFileSync("./src/functions.ts", "utf8");
+};
+
+const allFunctionsString = readFile();
+
+const allFunctions = funcs;
+
+describe("Matches JS functions with their source code", () => {
+  it("Finds 6 function in the code", () => {
+    expect(extractAll(allFunctionsString).length).toEqual(6);
   });
 
-  it("Detects that these are Functions", () => {
-    extractFunctions(testCode).map((node: any) => {
-      expect(node.kind).toEqual(SyntaxKind.FunctionDeclaration);
+  it("Finds 6 functions in the export", () => {
+    expect(Object.keys(allFunctions).length).toEqual(6);
+  });
+
+  it("Transforms object of functions into list", () => {
+    expect(calcAll(allFunctions).length).toEqual(6);
+  });
+
+  it("Finds regular function func0 from list of functions", () => {
+    expect(match(extractAll(allFunctionsString))(calcJSFunctionParams(funcs.func0)).name).toEqual("func0");
+  });
+
+  it("Finds const function func1Number from list of functions", () => {
+    expect(
+      match(extractAll(allFunctionsString))(calcJSFunctionParams(funcs.func1Number, "func1Number")).name
+    ).toEqual("func1Number");
+  });
+
+  it("Matches all the functions", () => {
+    const matcher = match(extractAll(allFunctionsString));
+    calcAll(allFunctions).map(jsFunc => {
+      expect(matcher(jsFunc).name).toEqual(jsFunc.name);
     });
   });
 
-  it("Detects that the function requires one argument", () => {
-    const firstFunc = extractFunctions(testCode)[0];
-    expect(firstFunc.parameters.length).toEqual(1);
+  it("Wraps all the functions", () => {
+    const matcher = match(extractAll(allFunctionsString));
+    calcAll(allFunctions).map(jsFunc => {
+      const matched = matcher(jsFunc);
+      const wrapped = wrapMatched(matched, jsFunc);
+      expect(wrapped && wrapped.name).toEqual(jsFunc.name);
+      expect(wrapped && wrapped.func).toEqual(jsFunc.func);
+      expect(wrapped && wrapped.details).toEqual(matched);
+    });
   });
 
-  it("Detects that the first function requires a number", () => {
-    const firstFunc = extractFunctions(testCode)[0];
-    expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.NumberKeyword);
+  it("Wraps everything in one go", () => {
+    expect(wrapAll(allFunctionsString, allFunctions)).toHaveLength(6);
   });
 
-  it("Gets the first functions name", () => {
-    const firstFunc = extractFunctions(testCode)[0];
-    expect(firstFunc.name).toEqual("func1Number2");
-  });
-
-  it("Counts 1 line of statements in the first function", () => {
-    const firstFunc = extractFunctions(testCode)[0];
-    expect(firstFunc.lines).toEqual(1);
+  it("Finds a const func in pile", () => {
+    const allWrapped = wrapAll(allFunctionsString, allFunctions);
+    expect(findInWrapped(allWrapped, funcs.func1Number).name).toEqual("func1Number");
   });
 });

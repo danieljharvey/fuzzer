@@ -1,31 +1,32 @@
-import { tsquery } from "@phenomnomnominal/tsquery";
-import { SourceFile, SyntaxKind } from "typescript";
-
 // great job
-const fs = require("fs");
+export * from "./ts-funcs";
+export * from "./js-funcs";
+export * from "./matcher";
+import { extractAll } from "./ts-funcs";
+import { match, wrapMatched } from "./matcher";
+import { calcAll } from "./js-funcs";
+import { SyntaxKind } from "typescript";
 
-export const runFunction = (func: (...args: any[]) => any) => {
-  switch (func.length) {
-    case 0:
-      return func();
-    case 1:
-      return oneArity(func);
-    case 2:
-      return twoArity(func);
-    default:
-      return func();
+export const runFunction = (wrapped: any[], func: (...args: any[]) => any) => {
+  const wrap = findInWrapped(wrapped, func);
+  if (!wrap) {
+    throw "Could not find, what!";
   }
+  return wrap.details.parameters.length === 0 ? func() : runWithParams(wrap);
 };
 
-const oneArity = (func: (a: any) => any) => {
-  const a = genNumber();
-  return func(a);
+const runWithParams = (wrapped: any) => {
+  const paramData = wrapped.details.parameters.map(getParamData);
+  return wrapped.func(...paramData);
 };
 
-const twoArity = (func: (a: any, b: any) => any) => {
-  const a = genChar();
-  const b = genChar();
-  return func(a, b);
+const getParamData = (param: any) => {
+  switch (param.type) {
+    case SyntaxKind.StringKeyword:
+      return genChar();
+    default:
+      return genNumber();
+  }
 };
 
 const genChar = (): string => {
@@ -36,51 +37,17 @@ const genNumber = (): number => {
   return Math.random() * 30000;
 };
 
-const readFile = (): string => {
-  return fs.readFileSync("./src/functions.ts", "utf8");
+export const wrapAll = (code: string, obj: any) => {
+  const matcher = match(extractAll(code));
+  return calcAll(obj)
+    .map(jsFunc => {
+      const matched = matcher(jsFunc);
+      return wrapMatched(matched, jsFunc);
+    })
+    .filter(i => i);
 };
 
-export const extractConstFunctions = (code: string): any => {
-  const ast = tsquery.ast(code);
-
-  const query = "VariableStatement VariableDeclarationList";
-  const nodes = tsquery(ast, query);
-  // console.log(nodes[0]); // the TypeScript AST Node for the constructor function
-  return nodes.map(getVariableDeclaration).map(calcConstFunctionParams);
-};
-
-const getVariableDeclaration = (node: any) => node.declarations[0];
-
-export const extractFunctions = (code: string): any => {
-  const ast = tsquery.ast(code);
-
-  const query = "FunctionDeclaration";
-  const nodes = tsquery(ast, query);
-
-  return nodes.map(calcFunctionParams);
-};
-
-const calcConstFunctionParams = (node: any): any => {
-  return {
-    name: node.name.name,
-    kind: node.kind,
-    parameters: node.initializer.parameters.map(calcParameterTypes),
-    lines: node.initializer.body.statements.length
-  };
-};
-
-const calcFunctionParams = (node: any): any => {
-  return {
-    name: node.name.name,
-    kind: node.kind,
-    parameters: node.parameters.map(calcParameterTypes),
-    lines: node.body.statements.length
-  };
-};
-
-const calcParameterTypes = (param: any): any => {
-  return {
-    name: param.name.name,
-    type: param.type.kind
-  };
+export const findInWrapped = (wrapped: any[], func: any) => {
+  const found = wrapped.filter(wrap => wrap.func.toString() === func.toString());
+  return found.length > 0 ? found[0] : false;
 };
