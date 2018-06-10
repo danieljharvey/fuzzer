@@ -1,5 +1,6 @@
 import { tsquery } from "@phenomnomnominal/tsquery";
 import { SourceFile, SyntaxKind } from "typescript";
+import { ADDRGETNETWORKPARAMS } from "dns";
 
 export const extractAll = (code: string): any => {
   return extractConstFunctions(code).concat(extractFunctions(code));
@@ -50,6 +51,34 @@ const calcFunctionParams = (node: any): any => {
 const calcParameterTypes = (param: any): any => {
   return {
     name: param.name.name,
-    type: param.type.kind
+    type: calcType(param.type),
+    elementType: calcTypeArguments(param.type)
   };
+};
+
+const calcType = (type: any) => {
+  return type.kind === 161 ? getTypeFromName(type.typeName.name) : type.kind;
+};
+
+const getTypeFromName = (typeName: string) => {
+  switch (typeName.toLowerCase()) {
+    case "array":
+      return SyntaxKind.ArrayType;
+    default:
+      return SyntaxKind.Identifier;
+  }
+};
+
+const calcTypeArguments = (type: any) => {
+  if (type.elementType) {
+    return calcElementType([], type);
+  } else if (type.typeArguments) {
+    return type.typeArguments.map((typeArgument: any) => typeArgument.kind);
+  } else {
+    return 0;
+  }
+};
+
+const calcElementType = (all: SyntaxKind[], type: any): SyntaxKind[] => {
+  return type.elementType ? calcElementType([...all, type.elementType.kind], type.elementType) : all;
 };

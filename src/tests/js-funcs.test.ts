@@ -1,5 +1,5 @@
-import { calcJSFunctionParams } from "./js-funcs";
-import * as funcs from "./functions";
+import { calcJSFunctionParams } from "../js-funcs";
+import * as funcs from "./test-data/functions";
 import { SyntaxKind } from "typescript";
 
 describe("Passing JS functions for information", () => {

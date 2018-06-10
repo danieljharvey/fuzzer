@@ -1,4 +1,4 @@
-import { extractConstFunctions, extractFunctions } from "./ts-funcs";
+import { extractConstFunctions, extractFunctions } from "../ts-funcs";
 import { SyntaxKind } from "typescript";
 
 const testCode = `
@@ -95,5 +95,60 @@ describe("Parsing for regular functions", () => {
   it("Counts 1 line of statements in the first function", () => {
     const firstFunc = extractFunctions(testCode)[0];
     expect(firstFunc.lines).toEqual(1);
+  });
+});
+
+describe("It passes more complex parameters", () => {
+  it("Can detect an array of numbers", () => {
+    const firstCode = `const aaaa = (a: number[]): number[] => a`;
+    const firstFunc = extractConstFunctions(firstCode)[0];
+    const firstParam = firstFunc.parameters[0];
+    expect(firstParam.type).toEqual(SyntaxKind.ArrayType);
+    expect(firstParam.elementType[0]).toEqual(SyntaxKind.NumberKeyword);
+  });
+
+  it("Can detect an array of numbers in array<number> format", () => {
+    const firstCode = `const aaaa = (a: Array<number>): number[] => a`;
+    const firstFunc = extractConstFunctions(firstCode)[0];
+    const firstParam = firstFunc.parameters[0];
+    expect(firstParam.type).toEqual(SyntaxKind.ArrayType);
+    expect(firstParam.elementType[0]).toEqual(SyntaxKind.NumberKeyword);
+  });
+
+  it("Can spot a boolean", () => {
+    const firstCode = `const aaaa = (a: boolean): boolean => a`;
+    const firstFunc = extractConstFunctions(firstCode)[0];
+
+    expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.BooleanKeyword);
+  });
+
+  it("Detects a nested array", () => {
+    const code = `
+    export const board = (board: number[][]) => {
+      return board.map(row => row.map(thing => thing + 1));
+    };
+    `;
+    const firstFunc = extractConstFunctions(code)[0];
+    const firstParam = firstFunc.parameters[0];
+    expect(firstParam.type).toEqual(SyntaxKind.ArrayType);
+    expect(firstParam.elementType[0]).toEqual(SyntaxKind.ArrayType);
+    expect(firstParam.elementType[1]).toEqual(SyntaxKind.NumberKeyword);
+  });
+
+  it.skip("Can use an interface", () => {
+    const code = `
+      interface Horse {
+        name: string
+        age: number
+      }
+
+      const useHorse = (horse: Horse): boolean => {
+        return true
+      }
+    `;
+
+    const firstFunc = extractConstFunctions(code)[0];
+    const firstParam = firstFunc.parameters[0];
+    expect(firstParam.type).toEqual(SyntaxKind.Identifier);
   });
 });

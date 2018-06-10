@@ -22,10 +22,21 @@ const runWithParams = (wrapped: any) => {
 
 const getParamData = (param: any) => {
   switch (param.type) {
-    case SyntaxKind.StringKeyword:
-      return genChar();
     case SyntaxKind.ArrayType:
-      return genArray();
+      return genArray(param.elementType[0]);
+    default:
+      return dataForType(param.type);
+  }
+};
+
+const dataForType = (type: SyntaxKind) => {
+  switch (type) {
+    case SyntaxKind.StringKeyword:
+      return genString();
+    case SyntaxKind.NumberKeyword:
+      return genNumber();
+    case SyntaxKind.BooleanKeyword:
+      return genBool();
     default:
       return genNumber();
   }
@@ -33,18 +44,34 @@ const getParamData = (param: any) => {
 
 const randomIntGen = (max: number): number => Math.round(Math.random() * max);
 
+const genBool = (): boolean => {
+  return Boolean(randomIntGen(1));
+};
+
 const genChar = (): string => {
-  return String.fromCharCode(randomIntGen(512));
+  return String.fromCharCode(randomIntGen(255));
+};
+
+const genString = (): string => {
+  const length = randomIntGen(1000);
+  let str = "";
+  for (let i = 0; i < length; i++) {
+    str = str + genChar();
+  }
+  return str;
 };
 
 const genNumber = (): number => {
   return Math.random() * 30000;
 };
 
-const genArray = (): number[] => {
+const genArray = (subType: SyntaxKind): any[] => {
   const length = randomIntGen(1000);
-  const arr = new Array(length);
-  return arr.map(item => genNumber());
+  const arr = [];
+  for (let i = 0; i < length; i++) {
+    arr.push(dataForType(subType));
+  }
+  return arr;
 };
 
 export const wrapAll = (code: string, obj: any) => {

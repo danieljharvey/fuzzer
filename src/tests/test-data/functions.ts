@@ -7,7 +7,7 @@ export const func1Number = (num: number) => {
 };
 
 export const func1String = (str: string) => {
-  return str;
+  return str + "!";
 };
 
 export function func1Number2(nums: number[]): number[] {
