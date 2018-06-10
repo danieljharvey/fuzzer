@@ -69,13 +69,13 @@ const getTypeFromName = (typeName: string) => {
   }
 };
 
-const calcTypeArguments = (type: any) => {
+const calcTypeArguments = (type: any): SyntaxKind[] => {
   if (type.elementType) {
     return calcElementType([], type);
   } else if (type.typeArguments) {
     return type.typeArguments.map((typeArgument: any) => typeArgument.kind);
   } else {
-    return 0;
+    return [];
   }
 };
 

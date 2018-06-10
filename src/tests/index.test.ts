@@ -58,10 +58,9 @@ describe("It is the tests", () => {
     });
   });
 
-  it("Successfully generates a nested array", () => {
+  it.skip("Successfully generates a nested array", () => {
     const allWrapped = wrapAll(readFile("more-functions"), moreFuncs);
     const result = runFunction(allWrapped, moreFuncs.board);
-    console.log(result);
     expect(Array.isArray(result)).toBeTruthy();
     expect(Array.isArray(result[0])).toBeTruthy();
     expect(Array.isArray(result[0][0])).toBeFalsy();

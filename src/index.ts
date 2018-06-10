@@ -37,6 +37,9 @@ const dataForType = (type: SyntaxKind) => {
       return genNumber();
     case SyntaxKind.BooleanKeyword:
       return genBool();
+    case SyntaxKind.ArrayType:
+      console.log("array!");
+      return [[]];
     default:
       return genNumber();
   }

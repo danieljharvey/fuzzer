@@ -1,4 +1,4 @@
-import { extractConstFunctions, extractFunctions } from "../ts-funcs";
+import { extractConstFunctions, extractFunctions, extractAll } from "../ts-funcs";
 import { SyntaxKind } from "typescript";
 
 const testCode = `
@@ -99,42 +99,6 @@ describe("Parsing for regular functions", () => {
 });
 
 describe("It passes more complex parameters", () => {
-  it("Can detect an array of numbers", () => {
-    const firstCode = `const aaaa = (a: number[]): number[] => a`;
-    const firstFunc = extractConstFunctions(firstCode)[0];
-    const firstParam = firstFunc.parameters[0];
-    expect(firstParam.type).toEqual(SyntaxKind.ArrayType);
-    expect(firstParam.elementType[0]).toEqual(SyntaxKind.NumberKeyword);
-  });
-
-  it("Can detect an array of numbers in array<number> format", () => {
-    const firstCode = `const aaaa = (a: Array<number>): number[] => a`;
-    const firstFunc = extractConstFunctions(firstCode)[0];
-    const firstParam = firstFunc.parameters[0];
-    expect(firstParam.type).toEqual(SyntaxKind.ArrayType);
-    expect(firstParam.elementType[0]).toEqual(SyntaxKind.NumberKeyword);
-  });
-
-  it("Can spot a boolean", () => {
-    const firstCode = `const aaaa = (a: boolean): boolean => a`;
-    const firstFunc = extractConstFunctions(firstCode)[0];
-
-    expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.BooleanKeyword);
-  });
-
-  it("Detects a nested array", () => {
-    const code = `
-    export const board = (board: number[][]) => {
-      return board.map(row => row.map(thing => thing + 1));
-    };
-    `;
-    const firstFunc = extractConstFunctions(code)[0];
-    const firstParam = firstFunc.parameters[0];
-    expect(firstParam.type).toEqual(SyntaxKind.ArrayType);
-    expect(firstParam.elementType[0]).toEqual(SyntaxKind.ArrayType);
-    expect(firstParam.elementType[1]).toEqual(SyntaxKind.NumberKeyword);
-  });
-
   it.skip("Can use an interface", () => {
     const code = `
       interface Horse {
@@ -150,5 +114,71 @@ describe("It passes more complex parameters", () => {
     const firstFunc = extractConstFunctions(code)[0];
     const firstParam = firstFunc.parameters[0];
     expect(firstParam.type).toEqual(SyntaxKind.Identifier);
+  });
+});
+
+interface CodeTest {
+  title: string;
+  code: string;
+  parameters: any[];
+}
+
+const tests: CodeTest[] = [
+  {
+    title: "Detects a nested array",
+    code: `
+  export const board = (board: number[][]) => {
+    return board.map(row => row.map(thing => thing + 1));
+  };
+  `,
+    parameters: [
+      {
+        name: "board",
+        type: SyntaxKind.ArrayType,
+        elementType: [SyntaxKind.ArrayType, SyntaxKind.NumberKeyword]
+      }
+    ]
+  },
+  {
+    title: "Can spot a boolean",
+    code: `const aaaa = (a: boolean): boolean => a`,
+    parameters: [
+      {
+        name: "a",
+        type: SyntaxKind.BooleanKeyword,
+        elementType: []
+      }
+    ]
+  },
+  {
+    title: "Can detect an array of numbers in array<number> format",
+    code: `const aaaa = (a: Array<number>): number[] => a`,
+    parameters: [
+      {
+        name: "a",
+        type: SyntaxKind.ArrayType,
+        elementType: [SyntaxKind.NumberKeyword]
+      }
+    ]
+  },
+  {
+    title: "Can detect an array of numbers",
+    code: `const aaaa = (a: number[]): number[] => a`,
+    parameters: [
+      {
+        name: "a",
+        type: SyntaxKind.ArrayType,
+        elementType: [SyntaxKind.NumberKeyword]
+      }
+    ]
+  }
+];
+
+describe("Parameter shape making", () => {
+  it("Makes everything correctly", () => {
+    tests.map(test => {
+      const firstFunc = extractAll(test.code)[0];
+      expect(firstFunc.parameters).toEqual(test.parameters);
+    });
   });
 });
