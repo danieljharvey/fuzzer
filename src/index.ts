@@ -2,10 +2,11 @@
 export * from "./ts-funcs";
 export * from "./js-funcs";
 export * from "./matcher";
-import { extractAll } from "./ts-funcs";
+import { extractAll, FunctionParams, ParamType } from "./ts-funcs";
 import { match, wrapMatched } from "./matcher";
 import { calcAll } from "./js-funcs";
 import { SyntaxKind } from "typescript";
+import { InterfaceParams } from "./interfaces";
 
 export const runFunction = (wrapped: any[], func: (...args: any[]) => any) => {
   const wrap = findInWrapped(wrapped, func);
@@ -20,17 +21,12 @@ const runWithParams = (wrapped: any) => {
   return wrapped.func(...paramData);
 };
 
-const getParamData = (param: any) => {
-  switch (param.type) {
-    case SyntaxKind.ArrayType:
-      return genArray(param.elementType[0]);
-    default:
-      return dataForType(param.type);
-  }
+export const getParamData = (param: ParamType) => {
+  return dataForType(param.types);
 };
 
-const dataForType = (type: SyntaxKind) => {
-  switch (type) {
+const dataForType = (types: SyntaxKind[]) => {
+  switch (types[0]) {
     case SyntaxKind.StringKeyword:
       return genString();
     case SyntaxKind.NumberKeyword:
@@ -38,11 +34,18 @@ const dataForType = (type: SyntaxKind) => {
     case SyntaxKind.BooleanKeyword:
       return genBool();
     case SyntaxKind.ArrayType:
-      console.log("array!");
-      return [[]];
+      const remainder = types.slice(1);
+      return genArray(remainder);
     default:
       return genNumber();
   }
+};
+
+export const genInterface = (inter: InterfaceParams): any => {
+  return inter.children.reduce((acc, val: ParamType) => {
+    const data = val.types[0] === SyntaxKind.TypeLiteral ? genInterface(val) : getParamData(val);
+    return { ...acc, [val.name]: data };
+  }, {});
 };
 
 const randomIntGen = (max: number): number => Math.round(Math.random() * max);
@@ -68,11 +71,11 @@ const genNumber = (): number => {
   return Math.random() * 30000;
 };
 
-const genArray = (subType: SyntaxKind): any[] => {
+const genArray = (subTypes: SyntaxKind[]): any[] => {
   const length = randomIntGen(1000);
   const arr = [];
   for (let i = 0; i < length; i++) {
-    arr.push(dataForType(subType));
+    arr.push(dataForType(subTypes));
   }
   return arr;
 };

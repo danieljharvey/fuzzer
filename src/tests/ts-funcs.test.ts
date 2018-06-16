@@ -62,7 +62,7 @@ describe("Parsing for const functions", () => {
 
   it("Detects that the second const function requires a number", () => {
     const firstFunc = extractConstFunctions(testCode)[1];
-    expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.NumberKeyword);
+    expect(firstFunc.parameters[0].types).toEqual([SyntaxKind.NumberKeyword]);
   });
 });
 
@@ -84,7 +84,7 @@ describe("Parsing for regular functions", () => {
 
   it("Detects that the first function requires a number", () => {
     const firstFunc = extractFunctions(testCode)[0];
-    expect(firstFunc.parameters[0].type).toEqual(SyntaxKind.NumberKeyword);
+    expect(firstFunc.parameters[0].types).toEqual([SyntaxKind.NumberKeyword]);
   });
 
   it("Gets the first functions name", () => {
@@ -95,25 +95,6 @@ describe("Parsing for regular functions", () => {
   it("Counts 1 line of statements in the first function", () => {
     const firstFunc = extractFunctions(testCode)[0];
     expect(firstFunc.lines).toEqual(1);
-  });
-});
-
-describe("It passes more complex parameters", () => {
-  it.skip("Can use an interface", () => {
-    const code = `
-      interface Horse {
-        name: string
-        age: number
-      }
-
-      const useHorse = (horse: Horse): boolean => {
-        return true
-      }
-    `;
-
-    const firstFunc = extractConstFunctions(code)[0];
-    const firstParam = firstFunc.parameters[0];
-    expect(firstParam.type).toEqual(SyntaxKind.Identifier);
   });
 });
 
@@ -134,8 +115,8 @@ const tests: CodeTest[] = [
     parameters: [
       {
         name: "board",
-        type: SyntaxKind.ArrayType,
-        elementType: [SyntaxKind.ArrayType, SyntaxKind.NumberKeyword]
+        types: [SyntaxKind.ArrayType, SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        children: []
       }
     ]
   },
@@ -145,8 +126,8 @@ const tests: CodeTest[] = [
     parameters: [
       {
         name: "a",
-        type: SyntaxKind.BooleanKeyword,
-        elementType: []
+        types: [SyntaxKind.BooleanKeyword],
+        children: []
       }
     ]
   },
@@ -156,8 +137,8 @@ const tests: CodeTest[] = [
     parameters: [
       {
         name: "a",
-        type: SyntaxKind.ArrayType,
-        elementType: [SyntaxKind.NumberKeyword]
+        types: [SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        children: []
       }
     ]
   },
@@ -167,8 +148,37 @@ const tests: CodeTest[] = [
     parameters: [
       {
         name: "a",
-        type: SyntaxKind.ArrayType,
-        elementType: [SyntaxKind.NumberKeyword]
+        types: [SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        children: []
+      }
+    ]
+  },
+  {
+    title: "Can detect array of array of numbers",
+    code: `const aaaa = (a: number[][]): number[] => a`,
+    parameters: [
+      {
+        name: "a",
+        types: [SyntaxKind.ArrayType, SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        children: []
+      }
+    ]
+  },
+  {
+    title: "Can detect an interface",
+    code: `interface Horse {
+      name: string
+      age: number
+    }
+
+    const useHorse = (horse: Horse): boolean => {
+      return true
+    }`,
+    parameters: [
+      {
+        name: "horse",
+        types: [SyntaxKind.Identifier],
+        children: []
       }
     ]
   }

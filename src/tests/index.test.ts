@@ -6,8 +6,10 @@ import {
   match,
   wrapMatched,
   wrapAll,
-  findInWrapped
+  findInWrapped,
+  genInterface
 } from "../index";
+import { extractInterfaces } from "../interfaces";
 import * as funcs from "./test-data/functions";
 import * as moreFuncs from "./test-data/more-functions";
 const fs = require("fs");
@@ -58,7 +60,7 @@ describe("It is the tests", () => {
     });
   });
 
-  it.skip("Successfully generates a nested array", () => {
+  it("Successfully generates a nested array", () => {
     const allWrapped = wrapAll(readFile("more-functions"), moreFuncs);
     const result = runFunction(allWrapped, moreFuncs.board);
     expect(Array.isArray(result)).toBeTruthy();
@@ -123,5 +125,47 @@ describe("Matches JS functions with their source code", () => {
   it("Finds a const func in pile", () => {
     const allWrapped = wrapAll(allFunctionsString, allFunctions);
     expect(findInWrapped(allWrapped, funcs.func1Number).name).toEqual("func1Number");
+  });
+});
+
+const anotherInterface = `
+interface Stuff {
+    name: string
+    age: number
+    things: number[]
+  }`;
+
+describe("It uses an interface to generate data", () => {
+  it("Generates stuff that makes sense", () => {
+    const firstInterface = extractInterfaces(anotherInterface)[0];
+    const generated = genInterface(firstInterface);
+    expect(generated.name.toString()).toEqual(generated.name);
+    expect(Number(generated.age)).toEqual(generated.age);
+    generated.things.map((thing: number) => {
+      expect(Number(thing)).toEqual(thing);
+    });
+  });
+});
+
+const anotherMoreComplicatedInterface = `
+interface Stuff {
+    name: string
+    age: number
+    what: {
+        things: number[]
+        hat: string
+    }    
+  }`;
+
+describe("It uses an interface to generate data with nested stuff", () => {
+  it("Generates complicated stuff that makes sense", () => {
+    const firstInterface = extractInterfaces(anotherMoreComplicatedInterface)[0];
+    const generated = genInterface(firstInterface);
+    expect(generated.name.toString()).toEqual(generated.name);
+    expect(generated.what.hat.toString()).toEqual(generated.what.hat);
+    expect(Number(generated.age)).toEqual(generated.age);
+    generated.what.things.map((thing: number) => {
+      expect(Number(thing)).toEqual(thing);
+    });
   });
 });

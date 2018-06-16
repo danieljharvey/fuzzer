@@ -1,6 +1,5 @@
 import { tsquery } from "@phenomnomnominal/tsquery";
 import { SourceFile, SyntaxKind } from "typescript";
-import { ADDRGETNETWORKPARAMS } from "dns";
 
 export const extractAll = (code: string): any => {
   return extractConstFunctions(code).concat(extractFunctions(code));
@@ -26,7 +25,14 @@ export const extractFunctions = (code: string): any => {
   return nodes.map(calcFunctionParams);
 };
 
-const calcConstFunctionParams = (node: any): any => {
+export interface FunctionParams {
+  name: string;
+  kind: SyntaxKind;
+  parameters: { [key: string]: ParamType };
+  lines: number;
+}
+
+const calcConstFunctionParams = (node: any): FunctionParams => {
   return {
     name: node.name.name,
     kind: node.kind,
@@ -35,11 +41,11 @@ const calcConstFunctionParams = (node: any): any => {
   };
 };
 
-const getConstFunctionLines = (body: any) => {
+const getConstFunctionLines = (body: any): number => {
   return body.statements ? body.statements.length : body.text.split("\n").length;
 };
 
-const calcFunctionParams = (node: any): any => {
+const calcFunctionParams = (node: any): FunctionParams => {
   return {
     name: node.name.name,
     kind: node.kind,
@@ -48,19 +54,33 @@ const calcFunctionParams = (node: any): any => {
   };
 };
 
-const calcParameterTypes = (param: any): any => {
+export interface ParamType {
+  name: string;
+  types: SyntaxKind[];
+  children: ParamType[];
+}
+
+export const calcParameterTypes = (param: any): ParamType => {
   return {
     name: param.name.name,
-    type: calcType(param.type),
-    elementType: calcTypeArguments(param.type)
+    types: [calcType(param.type)].concat(calcTypeArguments(param.type)),
+    children: calcParameterChildren(param)
   };
 };
 
-const calcType = (type: any) => {
+const calcParameterChildren = (param: any): ParamType[] => {
+  if (calcType(param.type) !== SyntaxKind.TypeLiteral) {
+    return [];
+  } else {
+    return param.type.members.map(calcParameterTypes);
+  }
+};
+
+const calcType = (type: any): SyntaxKind => {
   return type.kind === 161 ? getTypeFromName(type.typeName.name) : type.kind;
 };
 
-const getTypeFromName = (typeName: string) => {
+const getTypeFromName = (typeName: string): SyntaxKind => {
   switch (typeName.toLowerCase()) {
     case "array":
       return SyntaxKind.ArrayType;

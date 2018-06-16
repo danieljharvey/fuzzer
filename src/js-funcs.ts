@@ -4,7 +4,15 @@ type Func = (...p: any[]) => any;
 
 export const calcAll = (obj: any) => Object.keys(obj).map(key => calcJSFunctionParams(obj[key], key));
 
-export const calcJSFunctionParams = (func: Func, funcName?: string) => {
+interface JSFunction {
+  name: string;
+  parameters: string[];
+  kind: SyntaxKind;
+  lines: number;
+  func: Func;
+}
+
+export const calcJSFunctionParams = (func: Func, funcName?: string): JSFunction => {
   return {
     name: getFunctionName(func, funcName || ""),
     parameters: parseParamNames(func.toString()),
