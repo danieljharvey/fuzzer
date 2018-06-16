@@ -1,11 +1,20 @@
 import { tsquery } from "@phenomnomnominal/tsquery";
-import { SourceFile, SyntaxKind } from "typescript";
+import { SyntaxKind } from "typescript";
+import { InterfaceParams, extractInterfaces } from "./interfaces";
 
-export const extractAll = (code: string): any => {
-  return extractConstFunctions(code).concat(extractFunctions(code));
+export interface Extracted {
+  funcs: FunctionParams[];
+  interfaces: InterfaceParams[];
+}
+
+export const extractAll = (code: string): Extracted => {
+  return {
+    funcs: extractConstFunctions(code).concat(extractFunctions(code)),
+    interfaces: extractInterfaces(code)
+  };
 };
 
-export const extractConstFunctions = (code: string): any => {
+export const extractConstFunctions = (code: string): FunctionParams[] => {
   const ast = tsquery.ast(code);
 
   const query = "VariableStatement VariableDeclarationList";
@@ -16,7 +25,7 @@ export const extractConstFunctions = (code: string): any => {
 
 const getVariableDeclaration = (node: any) => node.declarations[0];
 
-export const extractFunctions = (code: string): any => {
+export const extractFunctions = (code: string): FunctionParams[] => {
   const ast = tsquery.ast(code);
 
   const query = "FunctionDeclaration";
@@ -58,14 +67,20 @@ export interface ParamType {
   name: string;
   types: SyntaxKind[];
   children: ParamType[];
+  interfaceName: string;
 }
 
 export const calcParameterTypes = (param: any): ParamType => {
   return {
     name: param.name.name,
     types: [calcType(param.type)].concat(calcTypeArguments(param.type)),
-    children: calcParameterChildren(param)
+    children: calcParameterChildren(param),
+    interfaceName: calcInterfaceName(param)
   };
+};
+
+const calcInterfaceName = (param: any): string => {
+  return param.type.kind === SyntaxKind.TypeReference ? param.type.text : "";
 };
 
 const calcParameterChildren = (param: any): ParamType[] => {

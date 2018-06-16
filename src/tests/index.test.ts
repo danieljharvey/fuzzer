@@ -12,6 +12,7 @@ import {
 import { extractInterfaces } from "../interfaces";
 import * as funcs from "./test-data/functions";
 import * as moreFuncs from "./test-data/more-functions";
+import * as matcherFuncs from "./test-data/matcher-functions";
 const fs = require("fs");
 
 describe("It is the tests", () => {
@@ -67,9 +68,16 @@ describe("It is the tests", () => {
     expect(Array.isArray(result[0])).toBeTruthy();
     expect(Array.isArray(result[0][0])).toBeFalsy();
   });
+
+  it("Successfully generates an interface", () => {
+    const allWrapped = wrapAll(readFile("matcher-functions"), matcherFuncs);
+    const result = runFunction(allWrapped, matcherFuncs.showDog);
+    expect(String(result.name)).toEqual(result.name);
+    expect(Boolean(result.poo)).toEqual(result.poo);
+  });
 });
 
-const readFile = (filename: string): string => {
+export const readFile = (filename: string): string => {
   return fs.readFileSync(`./src/tests/test-data/${filename}.ts`, "utf8");
 };
 
@@ -79,7 +87,7 @@ const allFunctions = funcs;
 
 describe("Matches JS functions with their source code", () => {
   it("Finds 6 function in the code", () => {
-    expect(extractAll(allFunctionsString).length).toEqual(6);
+    expect(extractAll(allFunctionsString).funcs).toHaveLength(6);
   });
 
   it("Finds 6 functions in the export", () => {
@@ -91,24 +99,27 @@ describe("Matches JS functions with their source code", () => {
   });
 
   it("Finds regular function func0 from list of functions", () => {
-    expect(match(extractAll(allFunctionsString))(calcJSFunctionParams(funcs.func0)).name).toEqual("func0");
+    const found = match(extractAll(allFunctionsString).funcs)(calcJSFunctionParams(funcs.func0));
+    expect(found && found.name).toEqual("func0");
   });
 
   it("Finds const function func1Number from list of functions", () => {
-    expect(
-      match(extractAll(allFunctionsString))(calcJSFunctionParams(funcs.func1Number, "func1Number")).name
-    ).toEqual("func1Number");
+    const found = match(extractAll(allFunctionsString).funcs)(
+      calcJSFunctionParams(funcs.func1Number, "func1Number")
+    );
+    expect(found && found.name).toEqual("func1Number");
   });
 
   it("Matches all the functions", () => {
-    const matcher = match(extractAll(allFunctionsString));
+    const matcher = match(extractAll(allFunctionsString).funcs);
     calcAll(allFunctions).map(jsFunc => {
-      expect(matcher(jsFunc).name).toEqual(jsFunc.name);
+      const found = matcher(jsFunc);
+      expect(found && found.name).toEqual(jsFunc.name);
     });
   });
 
   it("Wraps all the functions", () => {
-    const matcher = match(extractAll(allFunctionsString));
+    const matcher = match(extractAll(allFunctionsString).funcs);
     calcAll(allFunctions).map(jsFunc => {
       const matched = matcher(jsFunc);
       const wrapped = wrapMatched(matched, jsFunc);
@@ -119,12 +130,12 @@ describe("Matches JS functions with their source code", () => {
   });
 
   it("Wraps everything in one go", () => {
-    expect(wrapAll(allFunctionsString, allFunctions)).toHaveLength(6);
+    expect(wrapAll(allFunctionsString, allFunctions).funcs).toHaveLength(6);
   });
 
   it("Finds a const func in pile", () => {
     const allWrapped = wrapAll(allFunctionsString, allFunctions);
-    expect(findInWrapped(allWrapped, funcs.func1Number).name).toEqual("func1Number");
+    expect(findInWrapped(allWrapped.funcs, funcs.func1Number).name).toEqual("func1Number");
   });
 });
 

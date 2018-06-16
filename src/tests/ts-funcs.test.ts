@@ -116,6 +116,7 @@ const tests: CodeTest[] = [
       {
         name: "board",
         types: [SyntaxKind.ArrayType, SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        interfaceName: "",
         children: []
       }
     ]
@@ -127,6 +128,7 @@ const tests: CodeTest[] = [
       {
         name: "a",
         types: [SyntaxKind.BooleanKeyword],
+        interfaceName: "",
         children: []
       }
     ]
@@ -138,6 +140,7 @@ const tests: CodeTest[] = [
       {
         name: "a",
         types: [SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        interfaceName: "Array<number>",
         children: []
       }
     ]
@@ -149,6 +152,7 @@ const tests: CodeTest[] = [
       {
         name: "a",
         types: [SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        interfaceName: "",
         children: []
       }
     ]
@@ -160,6 +164,7 @@ const tests: CodeTest[] = [
       {
         name: "a",
         types: [SyntaxKind.ArrayType, SyntaxKind.ArrayType, SyntaxKind.NumberKeyword],
+        interfaceName: "",
         children: []
       }
     ]
@@ -178,6 +183,7 @@ const tests: CodeTest[] = [
       {
         name: "horse",
         types: [SyntaxKind.Identifier],
+        interfaceName: "Horse",
         children: []
       }
     ]
@@ -187,7 +193,7 @@ const tests: CodeTest[] = [
 describe("Parameter shape making", () => {
   it("Makes everything correctly", () => {
     tests.map(test => {
-      const firstFunc = extractAll(test.code)[0];
+      const firstFunc = extractAll(test.code).funcs[0];
       expect(firstFunc.parameters).toEqual(test.parameters);
     });
   });

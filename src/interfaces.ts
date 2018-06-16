@@ -2,7 +2,7 @@ import { tsquery } from "@phenomnomnominal/tsquery";
 import { calcParameterTypes } from "./ts-funcs";
 import { getParamData } from "./index";
 
-export const extractInterfaces = (code: string): any => {
+export const extractInterfaces = (code: string): InterfaceParams[] => {
   const ast = tsquery.ast(code);
 
   const query = "InterfaceDeclaration";
