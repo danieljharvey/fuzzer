@@ -26,10 +26,11 @@ const getFunctionName = (func: any, funcName: string): string => {
   return func.name.length > 0 ? func.name : funcName;
 };
 
-const parseParamNames = (str: string): string[] => {
+export const parseParamNames = (str: string): string[] => {
   const start = str.indexOf("(");
   const end = str.indexOf(")");
-  const substr = str.substr(start + 1, end - start - 1);
+  const firstSpace = str.indexOf(' ')
+  const substr = (start === -1 && end === -1) ? str.substr(0, firstSpace) : str.substr(start + 1, end - start - 1)
   return substr.split(",").map(bit => bit.trim());
 };
 
@@ -44,7 +45,7 @@ const getFunctionLines = (func: any): number => {
 const parseFunctionBody = (str: string): string[] => {
   const start = str.indexOf("{");
   const end = str.lastIndexOf("}");
-  const substr = str.substr(start + 1, end - start - 1);
+  const substr = (start === -1 && end === -1) ? str.substr(0, str.length) : str.substr(start + 1, end - start - 1)
   return substr
     .split("\n")
     .map(bit => bit.trim())

@@ -8,11 +8,13 @@ import {
   wrapAll,
   findInWrapped,
   genInterface
-} from "../index";
+} from "../fuzzer";
 import { extractInterfaces } from "../interfaces";
 import * as funcs from "./test-data/functions";
 import * as moreFuncs from "./test-data/more-functions";
 import * as matcherFuncs from "./test-data/matcher-functions";
+import * as messFuncs from './test-data/mess'
+
 const fs = require("fs");
 
 describe("It is the tests", () => {
@@ -137,6 +139,12 @@ describe("Matches JS functions with their source code", () => {
     const allWrapped = wrapAll(allFunctionsString, allFunctions);
     expect(findInWrapped(allWrapped.funcs, funcs.func1Number).name).toEqual("func1Number");
   });
+
+  it("Wraps a complicated file without breaking", () => {
+    const code = readFile("mess");
+    const a = extractAll(code)
+    expect(true).toBeTruthy()
+  })
 });
 
 const anotherInterface = `

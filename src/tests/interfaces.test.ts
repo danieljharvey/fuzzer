@@ -1,7 +1,5 @@
 import { extractInterfaces } from "../interfaces";
 import { SyntaxKind } from "typescript";
-import { matchInterface } from "../matcher";
-import { readFile } from "./index.test";
 
 const basicInterfaceCode = `
 interface Horse {
@@ -87,14 +85,3 @@ describe("It understands nested interfaces", () => {
     expect(firstInterface.children[0].children[1].types).toEqual([SyntaxKind.NumberKeyword]);
   });
 });
-/*
-const someCode = readFile("matcher-functions");
-
-describe("Interface matching", () => {
-  it("Finds the interface by name", () => {
-    const interfaces = extractInterfaces(someCode);
-    const found = matchInterface(interfaces, "Dog");
-    expect(found && found.name).toEqual("Dog");
-  });
-});
-*/

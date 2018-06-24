@@ -1,6 +1,6 @@
 import { tsquery } from "@phenomnomnominal/tsquery";
 import { calcParameterTypes } from "./ts-funcs";
-import { getParamData } from "./index";
+import { getParamData } from "./fuzzer";
 
 export const extractInterfaces = (code: string): InterfaceParams[] => {
   const ast = tsquery.ast(code);
