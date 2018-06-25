@@ -23,7 +23,7 @@
     ]
   },
   "author": "Daniel J. Harvey",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@phenomnomnominal/tsquery": "^2.0.0-beta.1",
     "@types/jest": "^23.0.0",
