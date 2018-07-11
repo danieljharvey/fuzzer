@@ -1,4 +1,4 @@
-import { calcJSFunctionParams } from "../js-funcs";
+import { calcJSFunctionParams, parseParamNames } from "../js-funcs";
 import * as funcs from "./test-data/functions";
 import { SyntaxKind } from "typescript";
 
@@ -55,3 +55,12 @@ describe("Passing JS const functions for information", () => {
     expect(calcJSFunctionParams(funcs.func1NumberBracketless).func).toEqual(funcs.func1NumberBracketless);
   });
 });
+
+describe("ES2015 funcs", () => {
+  it("Recognise params", () => {
+    const stuff = `num => {
+      return num;
+    }`
+    expect(parseParamNames(stuff)).toEqual(['num'])
+  })
+})

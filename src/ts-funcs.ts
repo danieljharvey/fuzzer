@@ -7,19 +7,28 @@ export interface Extracted {
   interfaces: InterfaceParams[];
 }
 
-export const extractAll = (code: string): Extracted => {
-  return {
-    funcs: extractConstFunctions(code).concat(extractFunctions(code)),
-    interfaces: extractInterfaces(code)
-  };
-};
+function flatten(arr: any[]): any[] {
+  return arr.reduce(function (flat, toFlatten) {
+    return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+  }, []);
+}
+
+export const combineExtracted = (extracted: Extracted[]): Extracted => ({
+  funcs: flatten(extracted.map(x => x.funcs)),
+  interfaces: flatten(extracted.map(x => x.interfaces))
+})
+
+export const extractAll = (code: string): Extracted => ({
+  funcs: extractConstFunctions(code).concat(extractFunctions(code)),
+  interfaces: extractInterfaces(code)
+})
 
 export const extractConstFunctions = (code: string): FunctionParams[] => {
   const ast = tsquery.ast(code);
 
   const query = "VariableStatement VariableDeclarationList";
-  const nodes = tsquery(ast, query);
-  // console.log(nodes[0]); // the TypeScript AST Node for the constructor function
+  const nodes = tsquery(ast, query) || []
+
   return nodes.map(getVariableDeclaration).map(calcConstFunctionParams);
 };
 
@@ -29,7 +38,7 @@ export const extractFunctions = (code: string): FunctionParams[] => {
   const ast = tsquery.ast(code);
 
   const query = "FunctionDeclaration";
-  const nodes = tsquery(ast, query);
+  const nodes = tsquery(ast, query) || []
 
   return nodes.map(calcFunctionParams);
 };
@@ -42,15 +51,17 @@ export interface FunctionParams {
 }
 
 const calcConstFunctionParams = (node: any): FunctionParams => {
+  const parameters = node.initializer.parameters || []
   return {
     name: node.name.name,
     kind: node.kind,
-    parameters: node.initializer.parameters.map(calcParameterTypes),
+    parameters: parameters.map(calcParameterTypes).filter(notFalse),
     lines: getConstFunctionLines(node.initializer.body)
   };
 };
 
 const getConstFunctionLines = (body: any): number => {
+  if (!body) return 0
   return body.statements ? body.statements.length : body.text.split("\n").length;
 };
 
@@ -58,7 +69,7 @@ const calcFunctionParams = (node: any): FunctionParams => {
   return {
     name: node.name.name,
     kind: node.kind,
-    parameters: node.parameters.map(calcParameterTypes),
+    parameters: node.parameters.map(calcParameterTypes).filter(notFalse),
     lines: node.body.statements.length
   };
 };
@@ -70,7 +81,10 @@ export interface ParamType {
   interfaceName: string;
 }
 
-export const calcParameterTypes = (param: any): ParamType => {
+const notFalse = (x: any) => x !== false
+
+export const calcParameterTypes = (param: any): ParamType | false => {
+  if (param.name === undefined) return false
   return {
     name: param.name.name,
     types: [calcType(param.type)].concat(calcTypeArguments(param.type)),
